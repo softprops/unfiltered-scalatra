@@ -8,14 +8,15 @@ import org.clapper.avsl.Logger
 /** unfiltered plan */
 class Scalatra extends unfiltered.filter.Plan {
 
-  private val handlers = collection.mutable.Map[String,Function1[HttpResponse]]
+  private val handlers = collection.mutable.Map[String,Function1[AnyRef]]
 
   protected val _request    = new DynamicVariable[HttpRequest[_]](null)
 
   implicit def request = _request value
 
-  protected def executeRoutes =  {
-    
+  protected def executeRoutes:HttpResponse =  {
+    //executing routes
+    //using type inference, create properp HttpResponse
   }
   val logger = Logger(classOf[App])
 
@@ -27,7 +28,14 @@ class Scalatra extends unfiltered.filter.Plan {
   }
 }
 class App extends Scalatra {
-  
+  get("/hello") {
+    <html><body>
+          <h1>Hello, world!</h1>
+          Say <a href="hello-scalatra">hello to Scalatra </a><br >
+          here is the request object: {request.toString}.
+          </body>
+    </html>
+  } 
 }
 
 
