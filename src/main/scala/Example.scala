@@ -4,38 +4,50 @@ import unfiltered.request._
 import unfiltered.response._
 import org.clapper.avsl.Logger
 import util._
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 /** unfiltered plan */
-class Scalatra extends unfiltered.filter.Plan {
+trait Scalatra[Req,Res] {
 
-  private val handlers = collection.mutable.Map[String,Function0[AnyRef]]()
+  private lazy val handlers = collection.mutable.Map[String,Function0[ResponseFunction[Res]]]()
 
-  protected val _request    = new DynamicVariable[HttpRequest[_]](null)
+  private lazy val _request = new DynamicVariable[HttpRequest[_]](null)
 
-  def get(r:String)( f: => AnyRef) = {
+  def get(r:String)( f: => ResponseFunction[Res]) = {
     val p = () => f
     handlers += (r -> p)
   }
   implicit def request = _request value
 
-  protected def executeRoutes(req: HttpRequest[_]):ResponseFunction[javax.servlet.http.HttpServletResponse] =  {
-    //proper matching logic should come here, for now it's very simplistic
+  protected def executeRoutes(req: HttpRequest[_]):ResponseFunction[Res] =  {
+    //proper matching logic should come here, for now it's matching from left to right
     val handler = handlers.keys.filter(req.uri.startsWith(_))
-    //return type inference should come here
-    handler.headOption.map(handlers(_).asInstanceOf[ResponseFunction[javax.servlet.http.HttpServletResponse]]).getOrElse ( NotFound ~> ResponseString("could not find handler"))
+    handler.lastOption map(handlers(_)()) getOrElse ( NotFound ~> ResponseString("could not find handler"))
   }
   val logger = Logger(classOf[App])
 
-  def intent = {
+  //capture all requests
+  def intent: unfiltered.Cycle.Intent[Req,Res] = {
     case req @ _  =>  _request.withValue(req) {
       executeRoutes(req)
     }
   }
 }
-class App extends Scalatra {
+
+/**
+* would be nice to utilize unfiltered.filter.Plan.Intent and 
+* get rid of [HttpServletRequest,HttpServletResponse] but it should be OK for now
+*/
+class App extends unfiltered.filter.Plan with Scalatra[HttpServletRequest,HttpServletResponse] {
+
   get ("/hello") {
-    Ok ~> ResponseString("hello world, hello:"+request.toString)
+     ResponseString("hello world, hello request:"+request.toString)
   }
+
+  get ("/") {
+     ResponseString("hello index page!")
+  }
+
 }
 
 
