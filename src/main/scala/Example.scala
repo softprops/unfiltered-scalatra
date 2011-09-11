@@ -6,9 +6,9 @@ import org.clapper.avsl.Logger
 import util._
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-/** unfiltered plan */
 trait Scalatra[Req,Res] {
 
+  //this is used for all request methods for now
   private lazy val handlers = collection.mutable.Map[String,Function0[ResponseFunction[Res]]]()
 
   private lazy val _request = new DynamicVariable[HttpRequest[_]](null)
@@ -20,7 +20,7 @@ trait Scalatra[Req,Res] {
   implicit def request = _request value
 
   protected def executeRoutes(req: HttpRequest[_]):ResponseFunction[Res] =  {
-    //proper matching logic should come here, for now it's matching from left to right
+    //TODO:proper matching logic should come here, for now it's matching all request methods from left to right
     val handler = handlers.keys.filter(req.uri.startsWith(_))
     handler.lastOption map(handlers(_)()) getOrElse ( NotFound ~> ResponseString("could not find handler"))
   }
