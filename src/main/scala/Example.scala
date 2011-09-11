@@ -2,7 +2,6 @@ package com.example
 
 import unfiltered.request._
 import unfiltered.response._
-import util._
 import org.clapper.avsl.Logger
 
 /** unfiltered plan */
@@ -21,13 +20,13 @@ class Scalatra extends unfiltered.filter.Plan {
   protected def executeRoutes(req: HttpRequest[_]):ResponseFunction[javax.servlet.http.HttpServletResponse] =  {
     //proper matching logic should come here, for now it's very simplistic
     val handler = handlers.keys.filter(req.uri.startsWith(_))
+    //return type inference should come here
     handler.headOption.map(handlers(_).asInstanceOf[ResponseFunction[javax.servlet.http.HttpServletResponse]]).getOrElse ( NotFound ~> ResponseString("could not find handler"))
   }
   val logger = Logger(classOf[App])
 
   def intent = {
     case req @ _  =>  _request.withValue(req) {
-        executeRoutes(req)
     }
   }
 }
