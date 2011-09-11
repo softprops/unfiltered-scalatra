@@ -6,6 +6,14 @@ import org.clapper.avsl.Logger
 import util._
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
+
+trait ImplicitResponses {
+  implicit def str2responseFn(str: String) =
+    ResponseString(str)
+  implicit def xml2html(xml: scala.xml.NodeSeq) =
+    Html(xml)
+}
+
 trait Scalatra[Req,Res] {
 
   //this is used for all request methods for now
@@ -20,7 +28,7 @@ trait Scalatra[Req,Res] {
   implicit def request = _request value
 
   protected def executeRoutes(req: HttpRequest[_]):ResponseFunction[Res] =  {
-    //TODO:proper matching logic should come here, for now it's matching all request methods from right to left 
+    //TODO:proper matching logic should come here, for now it's matching all request methods from right to left
     val handler = handlers.keys.filter(req.uri.startsWith(_))
     handler.lastOption map(handlers(_)()) getOrElse ( NotFound ~> ResponseString("could not find handler"))
   }
@@ -35,17 +43,25 @@ trait Scalatra[Req,Res] {
 }
 
 /**
-* would be nice to utilize unfiltered.filter.Plan.Intent and 
+* would be nice to utilize unfiltered.filter.Plan.Intent and
 * get rid of [HttpServletRequest,HttpServletResponse] but it should be OK for now
 */
-class App extends unfiltered.filter.Plan with Scalatra[HttpServletRequest,HttpServletResponse] {
+class App extends unfiltered.filter.Plan with Scalatra[HttpServletRequest,HttpServletResponse]
+with ImplicitResponses {
+
+  get ("/html") {
+    <html>
+      <head></head>
+      <body>Hello html</body>
+    </html>
+  }
 
   get ("/hello") {
-     ResponseString("hello world, hello request:"+request.toString)
+     "hello world, hello request:"+request.toString
   }
 
   get ("/") {
-     ResponseString("hello index page!")
+     "hello index page!"
   }
 
 }
