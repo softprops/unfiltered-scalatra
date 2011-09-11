@@ -20,7 +20,7 @@ trait Scalatra[Req,Res] {
   implicit def request = _request value
 
   protected def executeRoutes(req: HttpRequest[_]):ResponseFunction[Res] =  {
-    //TODO:proper matching logic should come here, for now it's matching all request methods from left to right
+    //TODO:proper matching logic should come here, for now it's matching all request methods from right to left 
     val handler = handlers.keys.filter(req.uri.startsWith(_))
     handler.lastOption map(handlers(_)()) getOrElse ( NotFound ~> ResponseString("could not find handler"))
   }
