@@ -3,6 +3,7 @@ package com.example
 import unfiltered.request._
 import unfiltered.response._
 import org.clapper.avsl.Logger
+import util._
 
 /** unfiltered plan */
 class Scalatra extends unfiltered.filter.Plan {
@@ -27,6 +28,7 @@ class Scalatra extends unfiltered.filter.Plan {
 
   def intent = {
     case req @ _  =>  _request.withValue(req) {
+      executeRoutes(req)
     }
   }
 }
